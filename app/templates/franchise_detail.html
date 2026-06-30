@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,259 +8,54 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <style>
-        :root{
-            --bg:#15120F;
-            --bg-deep:#0A0807;
-            --stub:#6E1F2C;
-            --ink:#241D17;
-            --ink-soft:#5B4F42;
-            --cream:#F6E8C9;
-            --gold:#D8A03D;
-            --gold-deep:#B5832D;
-
-            --font-display:'Oswald', sans-serif;
-            --font-body:'Inter', sans-serif;
-            --font-mono:'JetBrains Mono', monospace;
-            
-            --card-radius: 12px;
-        }
-
-        * { box-sizing: border-box; }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background: var(--bg);
-            font-family: var(--font-body);
-            color: var(--cream);
-            overflow-x: hidden;
-        }
-
-        /* The cinematic breathing background */
-        body::before {
-            content:"";
-            position:fixed;
-            inset:0;
-            background:
-                radial-gradient(ellipse 70% 55% at 50% 38%, rgba(216,160,61,0.07), transparent 60%),
-                radial-gradient(ellipse 120% 90% at 50% 50%, var(--bg) 40%, var(--bg-deep) 100%);
-            animation:breathe 9s ease-in-out infinite;
-            pointer-events:none;
-            z-index:-1;
-        }
-
-        @keyframes breathe{
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.92; }
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-deep); }
-        ::-webkit-scrollbar-thumb { background: var(--ink-soft); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-deep); }
-
-        /* ─── CINEFILE NAV ─── */
-        .site-nav {
-            position: sticky; 
-            top: 0; 
-            width: 100%; 
-            height: 70px;
-            background: rgba(10, 8, 7, 0.85); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(246, 232, 201, 0.08);
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            padding: 0 5%; 
-            z-index: 1000;
-        }
-        .site-nav .brand {
-            display: flex; align-items: center; gap: 10px;
-            font-family: var(--font-display); font-size: 20px; font-weight: 600;
-            letter-spacing: 0.05em; text-transform: uppercase;
-            color: var(--cream); text-decoration: none;
-        }
-        .site-nav .nav-links { display: flex; gap: 32px; align-items: center; }
-        .site-nav .nav-links a {
-            color: rgba(246, 232, 201, 0.6); text-decoration: none;
-            font-family: var(--font-body); font-size: 13px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.06em;
-            transition: color 0.2s;
-        }
-        .site-nav .nav-links a:hover, .site-nav .nav-links a.active { color: var(--gold); }
-
-        /* ─── HERO SECTION ─── */
+        /* ─── HERO ─── */
         .hero {
             padding: 110px 5% 36px;
             text-align: center;
             border-bottom: 1px solid rgba(246, 232, 201, 0.08);
         }
+
         .hero h1 {
             font-family: var(--font-display);
             font-size: 3.8rem; font-weight: 700;
             color: var(--cream); margin: 0 0 10px;
             letter-spacing: 0.02em; text-transform: uppercase;
         }
+
         .meta-stats {
             font-family: var(--font-mono);
             color: var(--gold); font-size: 0.95rem;
             text-transform: uppercase; letter-spacing: 0.1em;
         }
 
+        /* ─── GRID ─── */
         .container {
             max-width: 1400px; margin: 0 auto;
             padding: 60px 5% 100px;
         }
 
-        /* ─── MOVIE CARDS ─── */
-        .poster-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 28px;
-        }
+        /* Wider poster info for this page (includes year) */
+        .poster-info { padding: 60px 20px 20px; }
 
-        .poster-card {
-            position: relative; aspect-ratio: 2 / 3;
-            border-radius: var(--card-radius); background: var(--bg-deep);
-            overflow: hidden;
-            box-shadow: inset 0 1px 0 rgba(246,232,201,0.1), 0 10px 20px rgba(0,0,0,0.6);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            opacity: 0; transform: translateY(20px); animation: fadeUp 0.6s forwards;
-        }
-
-        .poster-card:nth-child(1) { animation-delay: 0.05s; }
-        .poster-card:nth-child(2) { animation-delay: 0.10s; }
-        .poster-card:nth-child(3) { animation-delay: 0.15s; }
-        .poster-card:nth-child(n+4) { animation-delay: 0.20s; }
-
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-
-        .poster-card:hover {
-            transform: translateY(-5px) scale(1.03);
-            box-shadow: inset 0 1px 0 rgba(246,232,201,0.25), 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(216,160,61,0.1);
-        }
-
-        .poster-img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-            transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease, opacity 0.4s ease;
-        }
-        .poster-card:hover .poster-img { transform: scale(1.07); }
-        
-        .detail-link { position: absolute; inset: 0; z-index: 2; }
-
-        /* Card Content (Gradient, Title, Year) */
-        .poster-info {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 60px 20px 20px;
-            background: linear-gradient(to top, rgba(10,8,7,0.98) 0%, rgba(10,8,7,0.7) 50%, transparent 100%);
-            box-sizing: border-box; pointer-events: none; z-index: 3;
-            display: flex; flex-direction: column; gap: 4px;
-        }
-        .poster-title { 
-            font-family: var(--font-display); font-size: 1.3rem; 
-            font-weight: 600; color: var(--cream); line-height: 1.2; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.02em;
-        }
-        .poster-year { 
-            font-family: var(--font-mono); font-size: 0.8rem; 
-            color: rgba(246,232,201,0.6); 
-        }
-
-        /* Fallback Art (If no poster exists) */
-        .card-artwork {
-            position: absolute; inset: 0;
-            background: linear-gradient(145deg, var(--ink) 0%, var(--bg-deep) 100%);
-            display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 1;
-        }
-        .watermark {
-            font-size: 14rem; font-weight: 800; font-family: var(--font-display);
-            color: rgba(246,232,201,0.03); user-select: none;
-            position: absolute; top: -10%; right: -15%; transform: rotate(10deg);
-        }
-
-        /* ─── WATCHED TOGGLE LOGIC ─── */
-        .watch-toggle-btn {
-            position: absolute; top: 12px; right: 12px;
-            width: 36px; height: 36px; border-radius: 50%;
-            background: rgba(10,8,7,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(246,232,201,0.3);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 10; transition: all 0.2s ease;
-        }
-        .watch-toggle-btn:hover { background: rgba(10,8,7,0.9); transform: scale(1.1); border-color: var(--gold); }
-        .check-icon {
-            width: 7px; height: 13px;
-            border: solid rgba(246,232,201,0.5); border-width: 0 2px 2px 0;
-            transform: rotate(45deg) translateY(-2px); transition: all 0.2s ease;
-        }
-
-        /* Watched State Styles */
-        .poster-card.watched .poster-img { 
-            opacity: 0.45; 
-            /* Gives a slightly warm, desaturated vintage look when watched */
-            filter: grayscale(85%) sepia(15%); 
-        }
-        .poster-card.watched .watch-toggle-btn {
-            background: var(--gold); 
-            border-color: var(--gold);
-            box-shadow: 0 0 15px rgba(216,160,61,0.4);
-        }
-        .poster-card.watched .check-icon { border-color: var(--bg-deep); }
-
-        /* ─── MOBILE OPTIMIZATIONS ─── */
+        /* ─── MOBILE ─── */
         @media (max-width: 600px) {
-            .site-nav { padding: 0 16px; height: 60px; }
-            .site-nav .brand { font-size: 16px; gap: 6px; }
-            .site-nav .brand svg { width: 20px; height: 20px; }
-            .site-nav .nav-links { gap: 16px; }
-            .site-nav .nav-links a, .site-nav .nav-links form button { font-size: 11px; letter-spacing: 0.04em; }
-
             .hero { padding: 90px 16px 24px; }
             .hero h1 { font-size: 2.5rem; }
             .meta-stats { font-size: 0.8rem; }
             .container { padding: 32px 16px 80px; }
-
             .poster-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
             .poster-info { padding: 40px 12px 12px; }
             .poster-title { font-size: 1.05rem; }
-            .poster-year { font-size: 0.75rem; }
-
-            .watch-toggle-btn { width: 30px; height: 30px; top: 8px; right: 8px; }
-            .check-icon { width: 5px; height: 10px; }
+            .poster-year  { font-size: 0.75rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- BRANDED CINEFILE NAV -->
-    <nav class="site-nav">
-        <a href="/" class="brand">
-            <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-                <circle cx="13" cy="13" r="11.5" stroke="#F6E8C9" stroke-opacity="0.8" stroke-width="1.4"/>
-                <circle cx="13" cy="13" r="3" fill="#D8A03D"/>
-                <circle cx="13" cy="5.5" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="19.5" cy="9.7" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="19.5" cy="16.3" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="13" cy="20.5" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="6.5" cy="16.3" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="6.5" cy="9.7" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-            </svg>
-            Cinefile
-        </a>
-        <div class="nav-links">
-            <a href="/">Franchises</a>
-            <a href="{% url 'all_movies' %}">All Movies</a>
-            {% if user.is_authenticated %}
-                <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" style="background:none; border:none; color:rgba(246, 232, 201, 0.6); font-family:var(--font-body); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; padding:0;">Logout</button>
-                </form>
-            {% endif %}
-        </div>
-    </nav>
+    {% include 'partials/nav.html' with active_nav='franchises' %}
 
     <div class="hero">
         <h1>{{ franchise.name }}</h1>
@@ -281,7 +77,6 @@
                         <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="poster-img" loading="lazy">
                     {% endif %}
                 {% else %}
-                    <!-- Stylish Fallback if image is missing -->
                     <div class="card-artwork">
                         <div class="watermark">{{ movie.title|slice:":1" }}</div>
                     </div>
@@ -302,40 +97,7 @@
         </div>
     </div>
 
-    <!-- The exact same JS, completely untouched -->
-    <script>
-        document.querySelectorAll('.watch-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const movieId = this.getAttribute('data-movie-id');
-                const cardElement = document.getElementById(`card-${movieId}`);
-                const isCurrentlyWatched = cardElement.classList.contains('watched');
-
-                if (isCurrentlyWatched) cardElement.classList.remove('watched');
-                else cardElement.classList.add('watched');
-
-                fetch(`/toggle/${movieId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error('Database Sync Error:', error);
-                    if (isCurrentlyWatched) cardElement.classList.add('watched');
-                    else cardElement.classList.remove('watched');
-                    alert("Connection error. Could not save progress.");
-                });
-            });
-        });
-    </script>
-
+    <script src="{% static 'js/base.js' %}"></script>
+ 
 </body>
 </html>

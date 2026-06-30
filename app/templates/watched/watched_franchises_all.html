@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Watched Franchises — Cinefile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        .container { max-width: 1500px; margin: 0 auto; padding: 36px 5% 90px; }
+
+        /* Slightly wider thumbs on this "all franchises" view */
+        .fw-thumb { flex: 0 0 100px; }
+        .fw-thumb span.letter { font-size: 1.5rem; }
+        .fw-progress-bar { width: 130px; }
+        .fw-thumb-name { padding: 16px 5px 4px; font-size: 0.65rem; }
+
+        /* ─── MOBILE ─── */
+        @media (max-width: 600px) {
+            .container { padding: 20px 16px 70px; }
+            .franchise-row-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .franchise-row-title  { font-size: 1.15rem; }
+            .fw-thumb { flex: 0 0 78px; }
+
+            .filter-row {
+            top: 60px;
+            height: auto;
+            padding: 8px 16px 12px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+        }
+
+        /* ── TITLE GROUP:
+            back-link gets width:100% inside flex-wrap,
+            so it occupies the full first line,
+            and .title-icon + h2 fall together onto the second line ── */
+        /* ── FILTER ROW & BACK BUTTON STACKED ── */
+        .filter-row {
+            top: 60px;
+            height: auto; 
+            padding: 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        /* FIX: Use CSS Grid to organize the layout */
+        .filter-row .title-group {
+            display: grid;
+            grid-template-columns: auto 1fr; /* Makes the icon column tight, and title column fill space */
+            align-items: center;
+            width: 100%;
+            column-gap: 10px; /* Space between icon and title */
+            row-gap: 8px; /* Space between back button and the bottom row */
+        }
+
+        .back-link {
+            grid-column: 1 / -1; /* Forces the back button to span the entire top row */
+            justify-self: start; /* Prevents the invisible touch target from stretching across the screen */
+            padding: 0;
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Hide the vertical line on mobile since items are stacked */
+        .title-divider {
+            display: none !important;
+        }
+
+        .title-icon {
+            margin-right: 0; /* Grid handles the gap now, so we remove the desktop margin */
+        }
+
+        .filter-row h2 {
+            font-size: 1.3rem;
+            line-height: 1.2;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── SORT GROUP: separated by a faded line ── */
+        .filter-row .sort-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(246, 232, 201, 0.12);
+        }
+
+        .filter-row .sort-group .sort-label {
+            display: none;
+        }
+
+        .filter-row .sort-group form {
+            width: 100%;
+        }
+
+        .sort-toggle {
+            width: 100%;
+            display: flex;
+        }
+
+        .sort-toggle button {
+            flex: 1;
+            text-align: center;
+        }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/nav.html' with active_nav='watched' %}
+
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+    <div class="title-group">
+        <a href="{% url 'watched_list' %}" class="back-link">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+        </a>
+        <span class="title-divider" aria-hidden="true"></span>
+        <span class="title-icon"><i class="ti ti-stack-2" aria-hidden="true"></i></span>
+        <h2>Franchises Watched</h2>
+    </div>
+    <div class="sort-group">
+        <span class="sort-label">Sort</span>
+        <form method="GET" action="{% url 'watched_franchises_all' %}">
+            <div class="sort-toggle">
+                <button type="submit" name="sort" value="-last_watched"
+                    class="{% if current_sort == '-last_watched' %}active{% endif %}">
+                    Watch order
+                </button>
+                <button type="submit" name="sort" value="title"
+                    class="{% if current_sort == 'title' %}active{% endif %}">
+                    Alphabetical
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        {% if franchise_data %}
+            {% for fd in franchise_data %}
+            <div class="franchise-row">
+                <div class="franchise-row-header">
+                    <a href="{% url 'franchise_detail' fd.franchise.id %}" class="franchise-row-title">{{ fd.franchise.name }}</a>
+                    <div class="franchise-row-progress">
+                        <div class="fw-progress-bar">
+                            <div class="fw-progress-fill" style="width:{{ fd.percent }}%;"></div>
+                        </div>
+                        <span class="fw-progress-text {% if fd.watched_count == fd.total_count %}complete{% endif %}">
+                            {% if fd.watched_count == fd.total_count %}✓ Complete{% else %}{{ fd.watched_count }}/{{ fd.total_count }} Watched{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="carousel-wrap">
+                    <button class="carousel-arrow left is-hidden" onclick="scrollCarousel(this,-1)" aria-label="Scroll left">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <div class="carousel-track">
+                        {% for movie in fd.movies %}
+                        <a href="{% url 'movie_detail' movie.id %}"
+                           class="fw-thumb {% if movie.id in fd.watched_ids %}watched{% endif %}"
+                           title="{{ movie.title }}">
+                            {% if movie.poster_url %}
+                                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" loading="lazy">
+                            {% else %}
+                                <span class="letter">{{ movie.title|slice:":1" }}</span>
+                            {% endif %}
+                            {% if movie.id in fd.watched_ids %}<span class="fw-check">✓</span>{% endif %}
+                            <span class="fw-thumb-name">{{ movie.title }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-arrow right is-hidden" onclick="scrollCarousel(this,1)" aria-label="Scroll right">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">No franchises started yet. <a href="/">Browse franchises →</a></div>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        /* ── fw-thumb watch toggle (updates progress bar) ── */
+        document.querySelectorAll('.watch-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+
+                const movieId = this.getAttribute('data-movie-id');
+                const card    = document.getElementById(`card-${movieId}`);
+                const wasWatched = card.classList.contains('watched');
+
+                card.classList.toggle('watched');
+
+                const row = card.closest('.franchise-row');
+                if (row) {
+                    const total   = row.querySelectorAll('.fw-thumb').length;
+                    const watched = row.querySelectorAll('.fw-thumb.watched').length;
+                    const bar     = row.querySelector('.fw-progress-fill');
+                    const text    = row.querySelector('.fw-progress-text');
+                    if (bar)  bar.style.width = `${(watched / total) * 100}%`;
+                    if (text) {
+                        if (watched === total) {
+                            text.innerHTML = '✓ Complete';
+                            text.classList.add('complete');
+                        } else {
+                            text.innerHTML = `${watched}/${total} Watched`;
+                            text.classList.remove('complete');
+                        }
+                    }
+                }
+
+                fetch(`/toggle/${movieId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                }).catch(() => {
+                    card.classList.toggle('watched'); // revert
+                    alert("Connection error.");
+                });
+            });
+        });
+
+        /* ── bfcache sync ── */
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
+
+</body>
+</html>

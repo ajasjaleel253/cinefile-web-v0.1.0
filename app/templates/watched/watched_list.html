@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Watched List — Cinefile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        /* ─── HERO ─── */
+        .hero {
+            padding: 70px 5% 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(246, 232, 201, 0.08);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: 3rem; font-weight: 700;
+            color: var(--cream); margin: 0 0 8px;
+            letter-spacing: 0.02em; text-transform: uppercase;
+        }
+
+        .hero .sub {
+            font-family: var(--font-mono);
+            color: var(--gold); font-size: 0.9rem;
+            text-transform: uppercase; letter-spacing: 0.1em;
+        }
+
+        /* ─── LAYOUT ─── */
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 5% 100px; }
+
+        /* ─── SECTION HEADERS ─── */
+        .section-block { margin-top: 56px; }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 14px; margin-bottom: 24px;
+            padding-bottom: 16px; border-bottom: 1px solid rgba(246,232,201,0.08);
+        }
+
+        .section-header h2 {
+            margin: 0; display: flex; align-items: center; gap: 12px;
+            font-family: var(--font-display); font-size: 1.8rem;
+            font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+        }
+
+        .count-pill {
+            display: inline-flex; align-items: center; line-height: 1;
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--gold);
+            background: rgba(216,160,61,0.1); border: 1px solid rgba(216,160,61,0.3);
+            padding: 5px 10px; border-radius: 20px;
+            letter-spacing: 0.05em; text-transform: uppercase;
+        }
+
+        .show-all-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: rgba(246,232,201,0.7); text-decoration: none;
+            font-family: var(--font-body); font-size: 0.85rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s;
+        }
+        .show-all-link:hover { color: var(--gold); }
+        .show-all-link svg { width: 14px; height: 14px; transition: transform 0.2s; }
+        .show-all-link:hover svg { transform: translateX(3px); }
+
+        /* ─── MOVIES RAIL CARDS (always in watched/full-colour state here) ─── */
+        .poster-card {
+            flex: 0 0 190px;
+            aspect-ratio: 2 / 3;
+            scroll-snap-align: start;
+            /* Override grid animation — carousel cards appear immediately */
+            opacity: 1;
+            transform: none;
+            animation: none;
+        }
+
+        /* Watched-toggle on this page is always gold (everything shown IS watched) */
+        .watch-toggle-btn {
+            background: var(--gold);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(216,160,61,0.4);
+        }
+        .watch-toggle-btn:hover { transform: scale(1.1); }
+        .check-icon { border-color: var(--bg-deep); }
+
+        /* ─── MOBILE ─── */
+        @media (max-width: 600px) {
+            .hero { padding: 48px 16px 20px; }
+            .hero h1 { font-size: 2.1rem; }
+            .container { padding: 0 16px 70px; }
+            .section-block { margin-top: 38px; }
+            .section-header h2 { font-size: 1.4rem; }
+            .poster-card { flex: 0 0 145px; }
+            .fw-thumb { flex: 0 0 72px; }
+            .franchise-row-title { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 420px) {
+            .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .section-header h2 { font-size: 1.3rem; }
+            .show-all-link { align-self: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/nav.html' with active_nav='watched' %}
+
+    <div class="hero">
+        <h1>Your Watched List</h1>
+        <div class="sub">{{ total_movies_watched }} Movies · {{ total_franchises_watched }} Franchises</div>
+    </div>
+
+    <div class="container">
+
+        <!-- ════════ MOVIES WATCHED RAIL ════════ -->
+        <div class="section-block">
+            <div class="section-header">
+                <h2>Movies Watched <span class="count-pill">{{ total_movies_watched }}</span></h2>
+                <a href="{% url 'watched_movies_all' %}" class="show-all-link">
+                    Show All
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+            </div>
+
+            {% if watched_movies %}
+            <div class="carousel-wrap">
+                <button class="carousel-arrow left is-hidden" onclick="scrollCarousel(this,-1)" aria-label="Scroll left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div class="carousel-track" id="movies-rail">
+                    {% for movie in watched_movies %}
+                    <div class="poster-card" id="card-{{ movie.id }}">
+                        <a href="{% url 'movie_detail' movie.id %}" class="detail-link"></a>
+                        {% if movie.poster_url %}
+                            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="poster-img" loading="lazy">
+                        {% else %}
+                            <div class="card-artwork"><div class="watermark">{{ movie.title|slice:":1" }}</div></div>
+                        {% endif %}
+                        <div class="poster-info">
+                            <div class="poster-title">{{ movie.title }}</div>
+                            {% if movie.franchise %}<div class="poster-franchise-tag">{{ movie.franchise.name }}</div>{% endif %}
+                        </div>
+                        <div class="watch-toggle-btn" data-movie-id="{{ movie.id }}" title="Mark as unwatched">
+                            <div class="check-icon"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-arrow right is-hidden" onclick="scrollCarousel(this,1)" aria-label="Scroll right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </div>
+            {% else %}
+            <div class="empty-state">You haven't marked any movies as watched yet. <a href="{% url 'all_movies' %}">Browse all movies →</a></div>
+            {% endif %}
+        </div>
+
+        <!-- ════════ FRANCHISES WATCHED ════════ -->
+        <div class="section-block">
+            <div class="section-header">
+                <h2>Franchises Watched <span class="count-pill">{{ total_franchises_watched }}</span></h2>
+                <a href="{% url 'watched_franchises_all' %}" class="show-all-link">
+                    Show All
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+            </div>
+
+            {% if franchise_data %}
+                {% for fd in franchise_data %}
+                <div class="franchise-row">
+                    <div class="franchise-row-header">
+                        <a href="{% url 'franchise_detail' fd.franchise.id %}" class="franchise-row-title">{{ fd.franchise.name }}</a>
+                        <div class="franchise-row-progress">
+                            <div class="fw-progress-bar"><div class="fw-progress-fill" style="width:{{ fd.percent }}%;"></div></div>
+                            <span class="fw-progress-text {% if fd.watched_count == fd.total_count %}complete{% endif %}">
+                                {% if fd.watched_count == fd.total_count %}✓ Complete{% else %}{{ fd.watched_count }}/{{ fd.total_count }} Watched{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="carousel-wrap">
+                        <button class="carousel-arrow left is-hidden" onclick="scrollCarousel(this,-1)" aria-label="Scroll left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <div class="carousel-track">
+                            {% for movie in fd.movies %}
+                            <a href="{% url 'movie_detail' movie.id %}"
+                               class="fw-thumb {% if movie.id in fd.watched_ids %}watched{% endif %}"
+                               title="{{ movie.title }}">
+                                {% if movie.poster_url %}
+                                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" loading="lazy">
+                                {% else %}
+                                    <span class="letter">{{ movie.title|slice:":1" }}</span>
+                                {% endif %}
+                                {% if movie.id in fd.watched_ids %}<span class="fw-check">✓</span>{% endif %}
+                                <span class="fw-thumb-name">{{ movie.title }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-arrow right is-hidden" onclick="scrollCarousel(this,1)" aria-label="Scroll right">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">You haven't started any franchise yet. <a href="/">Browse franchises →</a></div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        /* ── Update count pill + hero stat ── */
+        function updateCountPills(moviesDelta) {
+            var rail = document.getElementById('movies-rail');
+            if (rail) {
+                var pill = rail.closest('.section-block').querySelector('.count-pill');
+                if (pill) pill.textContent = Math.max(0, (parseInt(pill.textContent.trim(), 10) || 0) + moviesDelta);
+            }
+            var sub = document.querySelector('.hero .sub');
+            if (sub) {
+                sub.textContent = sub.textContent.replace(/(\d+)(\s*Movies)/, function (m, n, rest) {
+                    return Math.max(0, parseInt(n, 10) + moviesDelta) + rest;
+                });
+            }
+        }
+
+        /* ── Update franchise progress bar ── */
+        function updateFranchiseProgress(row) {
+            var total   = row.querySelectorAll('.fw-thumb').length;
+            var watched = row.querySelectorAll('.fw-thumb.watched').length;
+            var bar     = row.querySelector('.fw-progress-fill');
+            var text    = row.querySelector('.fw-progress-text');
+
+            if (bar)  bar.style.width = (watched / total * 100) + '%';
+            if (text) {
+                if (watched === total) {
+                    text.innerHTML = '✓ Complete';
+                    text.classList.add('complete');
+                } else {
+                    text.innerHTML = watched + '/' + total + ' Watched';
+                    text.classList.remove('complete');
+                }
+            }
+
+            if (watched === 0) {
+                row.classList.add('removing');
+                setTimeout(function () {
+                    row.remove();
+
+                    var pill = document.querySelector('.section-block:last-child .count-pill');
+                    if (pill) pill.textContent = Math.max(0, (parseInt(pill.textContent.trim(), 10) || 0) - 1);
+
+                    var sub = document.querySelector('.hero .sub');
+                    if (sub) {
+                        sub.textContent = sub.textContent.replace(/(\d+)(\s*Franchises)/, function (m, n, rest) {
+                            return Math.max(0, parseInt(n, 10) - 1) + rest;
+                        });
+                    }
+
+                    var block = document.querySelector('.section-block:last-child');
+                    if (block && block.querySelectorAll('.franchise-row').length === 0) {
+                        var el = document.createElement('div');
+                        el.className = 'empty-state';
+                        el.innerHTML = "You haven't started any franchise yet. <a href='/'>Browse franchises →</a>";
+                        block.appendChild(el);
+                    }
+                }, 300);
+            }
+        }
+
+        /* ── Unwatch from Movies rail ── */
+        document.querySelectorAll('#movies-rail .watch-toggle-btn').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault(); e.stopPropagation();
+
+                var movieId = this.getAttribute('data-movie-id');
+                var card    = document.getElementById('card-' + movieId);
+
+                if (card) {
+                    card.classList.add('removing');
+                    setTimeout(function () { card.remove(); }, 300);
+                }
+
+                // Sync franchise thumbs
+                document.querySelectorAll('.fw-thumb[href*="/' + movieId + '/"]').forEach(function (thumb) {
+                    thumb.classList.remove('watched');
+                    var badge = thumb.querySelector('.fw-check');
+                    if (badge) badge.remove();
+                    var row = thumb.closest('.franchise-row');
+                    if (row) updateFranchiseProgress(row);
+                });
+
+                updateCountPills(-1);
+
+                fetch('/toggle/' + movieId + '/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                })
+                .then(function (res) { if (!res.ok) throw new Error('Network error'); return res.json(); })
+                .catch(function () {
+                    alert('Connection error. Please refresh the page.');
+                    window.location.reload();
+                });
+            });
+        });
+
+        /* ── bfcache: just reload so server renders fresh state ── */
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
+
+</body>
+</html>

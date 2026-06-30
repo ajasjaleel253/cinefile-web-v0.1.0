@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,113 +8,51 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <style>
-        :root{
-            --bg:#15120F;
-            --bg-deep:#0A0807;
-            --stub:#6E1F2C;
-            --ink:#241D17;
-            --ink-soft:#5B4F42;
-            --cream:#F6E8C9;
-            --gold:#D8A03D;
-            --gold-deep:#B5832D;
+        /* ─── MOVIE DETAIL: full-bleed backdrop layout ─── */
 
-            --font-display:'Oswald', sans-serif;
-            --font-body:'Inter', sans-serif;
-            --font-mono:'JetBrains Mono', monospace;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            background-color: var(--bg);
-            color: var(--cream);
-            font-family: var(--font-body);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* The cinematic breathing background (acts as absolute base layer) */
-        body::before {
-            content:"";
-            position:fixed;
-            inset:0;
-            background:
-                radial-gradient(ellipse 70% 55% at 50% 38%, rgba(216,160,61,0.07), transparent 60%),
-                radial-gradient(ellipse 120% 90% at 50% 50%, var(--bg) 40%, var(--bg-deep) 100%);
-            animation:breathe 9s ease-in-out infinite;
-            pointer-events:none;
-            z-index:-3;
-        }
-
-        @keyframes breathe{
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.92; }
-        }
-
-        /* ─── CINEFILE NAV ─── */
+        /* Override nav to be fixed (backdrop scrolls behind it) */
         .site-nav {
-            position: fixed; 
-            top: 0; 
-            width: 100%; 
-            height: 70px;
-            background: rgba(10, 8, 7, 0.75); 
-            backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(246, 232, 201, 0.08);
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            padding: 0 5%; 
-            z-index: 1000;
+            position: fixed;
+            background: rgba(10, 8, 7, 0.75);
         }
-        .site-nav .brand {
-            display: flex; align-items: center; gap: 10px;
-            font-family: var(--font-display); font-size: 20px; font-weight: 600;
-            letter-spacing: 0.05em; text-transform: uppercase;
-            color: var(--cream); text-decoration: none;
-        }
-        .site-nav .nav-links { display: flex; gap: 32px; align-items: center; }
-        .site-nav .nav-links a {
-            color: rgba(246, 232, 201, 0.6); text-decoration: none;
-            font-family: var(--font-body); font-size: 13px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.06em;
-            transition: color 0.2s;
-        }
-        .site-nav .nav-links a:hover, .site-nav .nav-links a.active { color: var(--gold); }
 
-        /* ─── BACKDROP & VIGNETTE ─── */
+        /* Full-bleed backdrop pinned behind everything */
         .hero-backdrop {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100vh;
             {% if movie.backdrop_url %}
                 background-image: url('{{ movie.backdrop_url }}');
             {% else %}
                 background-image: radial-gradient(circle at 50% 30%, var(--bg-deep) 0%, var(--bg) 80%);
             {% endif %}
             background-size: cover; background-position: top center;
-            opacity: 0.75; /* Lets the breathing effect peek through slightly */
-            z-index: -2;
+            opacity: 0.95;
+            z-index: 0;
         }
 
         .vignette {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            /* Fades the backdrop smoothly into the Cinefile warm dark colors */
-            background: linear-gradient(to top, var(--bg) 0%, rgba(21,18,15,0.85) 20%, rgba(21,18,15,0.2) 60%, rgba(21,18,15,0.6) 100%),
-                        linear-gradient(to right, var(--bg-deep) 0%, rgba(10,8,7,0.5) 40%, transparent 100%);
-            z-index: -1;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100vh;
+            background:
+                linear-gradient(to top, var(--bg) 0%, rgba(21,18,15,0.85) 20%, rgba(21,18,15,0.2) 60%, rgba(21,18,15,0.6) 100%),
+                linear-gradient(to right, var(--bg-deep) 0%, rgba(10,8,7,0.5) 40%, transparent 100%);
+            z-index: 1;
         }
 
-        /* ─── CONTENT AREA ─── */
+        /* ─── CONTENT ─── */
+        .content { position: relative; z-index: 2; }
         .content {
             padding: 22vh 5% 100px;
             max-width: 800px;
         }
 
-        /* Breadcrumb back link */
         .back-link {
-            color: rgba(246, 232, 201, 0.6); text-decoration: none; font-size: 0.95rem;
-            font-family: var(--font-body); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
+            color: rgba(246, 232, 201, 0.6); text-decoration: none;
+            font-size: 0.95rem; font-family: var(--font-body);
+            font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
             display: inline-flex; align-items: center; gap: 8px;
             margin-bottom: 28px; transition: color 0.2s;
         }
@@ -121,27 +60,33 @@
 
         .title {
             font-family: var(--font-display);
-            font-size: 4.5rem; font-weight: 700; margin: 0 0 10px;
-            line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            font-size: 4.5rem; font-weight: 700;
+            margin: 0 0 10px; line-height: 1.1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
             letter-spacing: 0.01em; text-transform: uppercase;
         }
+
         .tagline {
             font-family: var(--font-body);
-            font-size: 1.3rem; font-weight: 400; color: var(--gold);
-            font-style: italic; margin-bottom: 24px;
+            font-size: 1.3rem; font-weight: 400;
+            color: var(--gold); font-style: italic;
+            margin-bottom: 24px;
         }
 
         .metadata {
             display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-            font-family: var(--font-mono); font-size: 0.9rem; text-transform: uppercase;
-            color: rgba(246, 232, 201, 0.8); margin-bottom: 32px; letter-spacing: 0.05em;
+            font-family: var(--font-mono); font-size: 0.9rem;
+            text-transform: uppercase; color: rgba(246, 232, 201, 0.8);
+            margin-bottom: 32px; letter-spacing: 0.05em;
         }
+
         .divider { color: var(--ink-soft); }
 
         .overview {
             font-family: var(--font-body);
             font-size: 1.15rem; line-height: 1.7; max-width: 680px;
-            margin-bottom: 45px; text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            margin-bottom: 45px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
             color: rgba(246, 232, 201, 0.9);
         }
 
@@ -154,77 +99,62 @@
             cursor: pointer; border: none; transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        .btn-unwatched { 
-            background: var(--gold); color: var(--ink); 
-        }
-        .btn-unwatched:hover { 
-            background: var(--gold-deep); transform: translateY(-2px); 
-        }
-        
+
+        .btn-unwatched { background: var(--gold); color: var(--ink); }
+        .btn-unwatched:hover { background: var(--gold-deep); transform: translateY(-2px); }
+
         .btn-watched {
             background: rgba(10,8,7,0.6); color: var(--gold);
             border: 1px solid var(--gold);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
-        .btn-watched:hover { 
-            background: rgba(10,8,7,0.9); box-shadow: 0 0 15px rgba(216,160,61,0.25);
+        .btn-watched:hover { background: rgba(10,8,7,0.9); box-shadow: 0 0 15px rgba(216,160,61,0.25); }
+
+        .watch-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
         }
 
-        /* ─── MOBILE OPTIMIZATIONS ─── */
-        @media (max-width: 600px) {
-            .site-nav { padding: 0 16px; height: 60px; }
-            .site-nav .brand { font-size: 16px; gap: 6px; }
-            .site-nav .brand svg { width: 20px; height: 20px; }
-            .site-nav .nav-links { gap: 16px; }
-            .site-nav .nav-links a, .site-nav .nav-links form button { font-size: 11px; letter-spacing: 0.04em; }
+        .btn-watchlist-add {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+        .btn-watchlist-add:hover { background: rgba(216,160,61,0.1); transform: translateY(-2px); }
 
+        .btn-watchlist-added {
+            background: rgba(10,8,7,0.6);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        }
+        .btn-watchlist-added:hover { background: rgba(10,8,7,0.9); box-shadow: 0 0 15px rgba(216,160,61,0.25); }
+
+        /* ─── MOBILE ─── */
+        @media (max-width: 600px) {
             .content { padding: 16vh 16px 80px; }
             .back-link { font-size: 0.85rem; margin-bottom: 20px; }
-            
-            .title { font-size: 2.8rem; }
-            .tagline { font-size: 1.1rem; }
-            
-            .metadata { font-size: 0.75rem; gap: 8px; margin-bottom: 24px; }
-            .overview { font-size: 1.05rem; margin-bottom: 35px; }
-            
+            .title     { font-size: 2.8rem; }
+            .tagline   { font-size: 1.1rem; }
+            .metadata  { font-size: 0.75rem; gap: 8px; margin-bottom: 24px; }
+            .overview  { font-size: 1.05rem; margin-bottom: 35px; }
             .btn-watch { width: 100%; padding: 16px; font-size: 1rem; }
+            .watch-actions { flex-direction: column; }
+            .btn-watch { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="site-nav">
-        <a href="/" class="brand">
-            <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-                <circle cx="13" cy="13" r="11.5" stroke="#F6E8C9" stroke-opacity="0.8" stroke-width="1.4"/>
-                <circle cx="13" cy="13" r="3" fill="#D8A03D"/>
-                <circle cx="13" cy="5.5" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="19.5" cy="9.7" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="19.5" cy="16.3" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="13" cy="20.5" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="6.5" cy="16.3" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-                <circle cx="6.5" cy="9.7" r="2" fill="#F6E8C9" fill-opacity="0.65"/>
-            </svg>
-            Cinefile
-        </a>
-        <div class="nav-links">
-            <a href="/">Franchises</a>
-            <a href="{% url 'all_movies' %}">All Movies</a>
-            {% if user.is_authenticated %}
-                <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" style="background:none; border:none; color:rgba(246, 232, 201, 0.6); font-family:var(--font-body); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; padding:0;">Logout</button>
-                </form>
-            {% endif %}
-        </div>
-    </nav>
+    {% include 'partials/nav.html' with active_nav='' %}
 
     <div class="hero-backdrop"></div>
     <div class="vignette"></div>
 
     <div class="content">
         <a href="{% url 'franchise_detail' movie.franchise.id %}" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <i class="ti ti-arrow-left" aria-hidden="true"></i>
             {{ movie.franchise.name }}
         </a>
 
@@ -252,39 +182,18 @@
         {% if movie.overview %}
             <div class="overview">{{ movie.overview }}</div>
         {% endif %}
+        <div class="watch-actions">
+            <button id="watch-btn" data-movie-id="{{ movie.id }}" class="btn-watch {% if is_watched %}btn-watched{% else %}btn-unwatched{% endif %}">
+                {% if is_watched %}✓ Watched{% else %}+ Mark as Watched{% endif %}
+            </button>
 
-        <button id="watch-btn" class="btn-watch {% if is_watched %}btn-watched{% else %}btn-unwatched{% endif %}">
-            {% if is_watched %}✓ Watched{% else %}+ Mark as Watched{% endif %}
-        </button>
+            <button id="watchlist-btn" data-movie-id="{{ movie.id }}" class="btn-watch {% if is_in_watchlist %}btn-watchlist-added{% else %}btn-watchlist-add{% endif %}">
+                {% if is_in_watchlist %}✓ In Watchlist{% else %}+ Add to Watchlist{% endif %}
+            </button>
+        </div>
     </div>
 
-    <script>
-        const watchBtn = document.getElementById('watch-btn');
-        let isWatched = {{ is_watched|yesno:"true,false" }};
-
-        watchBtn.addEventListener('click', function() {
-            isWatched = !isWatched;
-            updateButtonUI();
-
-            fetch(`/toggle/{{ movie.id }}/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
-            }).catch(error => {
-                isWatched = !isWatched;
-                updateButtonUI();
-                alert("Error connecting to server.");
-            });
-        });
-
-        function updateButtonUI() {
-            if (isWatched) {
-                watchBtn.className = 'btn-watch btn-watched';
-                watchBtn.innerHTML = '✓ Watched';
-            } else {
-                watchBtn.className = 'btn-watch btn-unwatched';
-                watchBtn.innerHTML = '+ Mark as Watched';
-            }
-        }
-    </script>
+    <script src="{% static 'js/base.js' %}"></script>
+    
 </body>
 </html>

@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — Cinefile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        /* ─── PAGE-SPECIFIC: profile page container ───
+           Everything else (tokens, breathing background, nav,
+           profile-card, mobile rules) lives in base.css. */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 5% 100px;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 32px 16px 80px; }
+        }
+
+        /* ─── PAGE-SPECIFIC: watchlist rail card sizing ───
+           Reuses .poster-card / .carousel-track from base.css but
+           pins a fixed width so cards behave as flex children
+           inside the horizontally-scrolling rail instead of
+           stretching to fill a grid column. */
+        .watchlist-card {
+            flex: 0 0 180px;
+            width: 180px;
+            scroll-snap-align: start;
+        }
+
+        @media (max-width: 600px) {
+            .watchlist-card { flex: 0 0 130px; width: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BRANDED CINEFILE NAV -->
+    <nav class="site-nav">
+        <!-- Brand -->
+        <a href="/" class="brand">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+                <circle cx="15" cy="15" r="13.5" stroke="#F6E8C9" stroke-opacity="0.7" stroke-width="1.3"/>
+                <circle cx="15" cy="15" r="3.2" fill="#D4983A"/>
+                <circle cx="15" cy="6"   r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+                <circle cx="22.4" cy="10.5" r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+                <circle cx="22.4" cy="19.5" r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+                <circle cx="15" cy="24"   r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+                <circle cx="7.6" cy="19.5" r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+                <circle cx="7.6" cy="10.5" r="2.1" fill="#F6E8C9" fill-opacity="0.6"/>
+            </svg>
+            <span class="brand-text">CINE<span>FILE</span></span>
+        </a>
+
+        <!-- Primary nav links -->
+        <div class="nav-links">
+            <a href="/"><i class="ti ti-stack-2" aria-hidden="true"></i> Franchises</a>
+            <a href="{% url 'all_movies' %}"><i class="ti ti-movie" aria-hidden="true"></i> Movies</a>
+            <a href="{% url 'watched_list' %}" class="active"><i class="ti ti-eye" aria-hidden="true"></i> Watched</a>
+        </div>
+
+        <!-- Search -->
+        <div class="nav-search">
+            <form action="{% url 'search' %}" method="get" class="search-wrap">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" name="q" placeholder="Search movies, franchises…"
+                       value="{{ query|default:'' }}" aria-label="Search movies and franchises">
+                <button type="submit" tabindex="-1" aria-hidden="true">Search</button>
+            </form>
+        </div>
+
+        <!-- Right: profile / login -->
+        <div class="nav-right">
+            {% if user.is_authenticated %}
+                <div class="nav-divider" aria-hidden="true"></div>
+                <a href="{% url 'profile' %}" class="profile-pill">
+                    <div class="profile-avatar">{{ user.username|slice:":1" }}</div>
+                    <span class="profile-name">{{ user.username }}</span>
+                    <i class="ti ti-chevron-down" aria-hidden="true"></i>
+                </a>
+                <form action="{% url 'logout' %}" method="post" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-links nav-logout-btn"
+                            style="padding:6px 13px; border-radius:9px; display:flex; align-items:center; gap:6px;">
+                        <i class="ti ti-logout" aria-hidden="true"></i> Logout
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-login-link">Log In</a>
+            {% endif %}
+        </div>
+
+        <!-- Mobile: search toggle -->
+        <button type="button" class="nav-mobile-search-toggle" id="mobileSearchToggle"
+                aria-label="Toggle search" aria-expanded="false">
+            <i class="ti ti-search" aria-hidden="true"></i>
+        </button>
+        <!-- Mobile: hamburger -->
+        <button type="button" class="nav-menu-toggle" id="menuToggle"
+                aria-label="Open menu" aria-expanded="false">
+            <i class="ti ti-menu-2" aria-hidden="true"></i>
+        </button>
+
+        <!-- Mobile search row (drops below nav bar) -->
+        <div class="mobile-search-row" id="mobileSearchRow">
+            <form action="{% url 'search' %}" method="get" class="search-wrap">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" name="q" placeholder="Search movies, franchises…"
+                       value="{{ query|default:'' }}" aria-label="Search movies and franchises">
+                <button type="submit" tabindex="-1" aria-hidden="true">Search</button>
+            </form>
+        </div>
+
+    </nav>
+
+    <!-- Scrim + side menu (mobile) -->
+    <div class="nav-scrim" id="navScrim"></div>
+    <aside class="side-menu" id="sideMenu" aria-hidden="true">
+        <div class="side-menu-header">
+            <span class="brand-text">CINE<span>FILE</span></span>
+            <button type="button" class="side-menu-close" id="sideMenuClose" aria-label="Close menu">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="side-menu-profile">
+                <div class="profile-avatar">{{ user.username|slice:":1" }}</div>
+                <span class="side-menu-profile-name">{{ user.username }}</span>
+            </a>
+        {% endif %}
+
+        <nav class="side-menu-links">
+            <a href="/"><i class="ti ti-stack-2" aria-hidden="true"></i> Franchises</a>
+            <a href="{% url 'all_movies' %}"><i class="ti ti-movie" aria-hidden="true"></i> Movies</a>
+            <a href="{% url 'watched_list' %}" class="active"><i class="ti ti-eye" aria-hidden="true"></i> Watched</a>
+        </nav>
+
+        <div class="side-menu-footer">
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-logout-btn">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-login-link">Log In</a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <div class="container">
+        <div class="profile-wrap">
+            <div class="profile-card">
+                <span class="avatar-large">{{ user.username|slice:":1" }}</span>
+                <div class="profile-info">
+                    <h2>{{ user.username }}</h2>
+                    <p>{{ user.email|default:"No email on file" }}</p>
+                </div>
+            </div>
+
+            <div class="profile-meta">
+                <div class="profile-meta-row">
+                    <span>Member since</span>
+                    <span>{{ user.date_joined|date:"F Y" }}</span>
+                </div>
+                <div class="profile-meta-row">
+                    <span>Last login</span>
+                    <span>{{ user.last_login|date:"M d, Y, P" }}</span>
+                </div>
+            </div>
+
+            <form action="{% url 'logout' %}" method="post" class="profile-logout-form">
+                {% csrf_token %}
+                <button type="submit">Log Out</button>
+            </form>
+        </div>
+
+        <div class="results-section" style="margin-top: 48px;">
+            <div class="results-section-label">My Watchlist</div>
+
+            {% if watchlist_movies %}
+            <div class="carousel-wrap">
+                <button type="button" class="carousel-arrow left is-hidden" data-target="watchlistTrack" aria-label="Scroll left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+
+                <div class="carousel-track" id="watchlistTrack">
+                    {% for movie in watchlist_movies %}
+                    <div class="poster-card watchlist-card">
+                        <a href="{% url 'movie_detail' movie.id %}" class="detail-link" aria-label="{{ movie.title }}"></a>
+
+                        {% if movie.poster_url %}
+                            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="poster-img" loading="lazy">
+                        {% else %}
+                            <div class="card-artwork">
+                                <span class="watermark">{{ movie.title|slice:":1" }}</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="poster-info">
+                            <span class="poster-title">{{ movie.title }}</span>
+                            {% if movie.release_year %}<span class="poster-year">{{ movie.release_year }}</span>{% endif %}
+                            {% if movie.franchise %}<span class="poster-franchise-tag">{{ movie.franchise.name }}</span>{% endif %}
+                        </div>
+
+                        <button class="watchlist-remove-btn" data-movie-id="{{ movie.id }}" aria-label="Remove from watchlist">
+                            <span class="check-icon"></span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="carousel-arrow right" data-target="watchlistTrack" aria-label="Scroll right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                Nothing in your watchlist yet. <a href="{% url 'all_movies' %}">Browse movies</a> to add some.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        document.querySelectorAll('.watchlist-remove-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const movieId = this.dataset.movieId;
+                const card = this.closest('.poster-card');
+
+                fetch(`/toggle-watchlist/${movieId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('network');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.status === 'removed') {
+                        card.classList.add('removing');
+                        setTimeout(() => card.remove(), 300);
+                    }
+                })
+                .catch(() => alert('Error removing from watchlist.'));
+            });
+        });
+
+        (function setupCarousel(trackId) {
+            const track = document.getElementById(trackId);
+            if (!track) return;
+            const wrap = track.closest('.carousel-wrap');
+            const leftBtn = wrap.querySelector('.carousel-arrow.left');
+            const rightBtn = wrap.querySelector('.carousel-arrow.right');
+
+            function updateArrows() {
+                leftBtn.classList.toggle('is-hidden', track.scrollLeft <= 4);
+                rightBtn.classList.toggle('is-hidden', track.scrollLeft >= track.scrollWidth - track.clientWidth - 4);
+            }
+
+            leftBtn.addEventListener('click', () => track.scrollBy({ left: -360, behavior: 'smooth' }));
+            rightBtn.addEventListener('click', () => track.scrollBy({ left: 360, behavior: 'smooth' }));
+            track.addEventListener('scroll', updateArrows);
+            window.addEventListener('resize', updateArrows);
+            updateArrows();
+        })('watchlistTrack');
+
+        window.addEventListener('pageshow', function (event) {
+            if (!event.persisted) return; // only act when restored from bfcache
+
+            fetch('/watchlist-status/')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    var currentIds = new Set(data.watchlist.map(String));
+                    document.querySelectorAll('.watchlist-remove-btn').forEach(function (btn) {
+                        var movieId = String(btn.dataset.movieId);
+                        if (!currentIds.has(movieId)) {
+                            var card = btn.closest('.poster-card');
+                            if (card) card.remove();
+                        }
+                    });
+
+                    // if the watchlist is now empty, you could optionally swap in
+                    // the empty-state message here, but a silent removal is fine too
+                })
+                .catch(function (error) { console.error('Failed to sync watchlist status:', error); });
+        });
+    </script>
+</body>
+</html>

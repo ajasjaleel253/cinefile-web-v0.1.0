@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Watched Movies — Cinefile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        .container { max-width: 1600px; margin: 0 auto; padding: 36px 5% 80px; }
+
+        /* Cards here are always in "watched" state — gold toggle, no greyscale */
+        .watch-toggle-btn {
+            background: var(--gold);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(216,160,61,0.4);
+        }
+        .watch-toggle-btn:hover { transform: scale(1.1); }
+        .check-icon { border-color: var(--bg-deep); }
+
+        /* ─── MOBILE ─── */
+        @media (max-width: 600px) {
+            .container { padding: 20px 16px 60px; }
+            .poster-grid {
+                grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+                gap: 14px;
+            }
+            .poster-info { padding: 40px 10px 10px; }
+            .poster-title { font-size: 0.95rem; line-height: 1.1; }
+            .poster-franchise-tag { font-size: 0.6rem; }
+        }
+
+        @media (max-width: 680px) {
+            .filter-row {
+                top: 60px;
+                height: auto; /* CRITICAL: Removes the fixed 64px desktop height */
+                min-height: 60px;
+                padding: 14px 16px;
+                flex-direction: column;
+                align-items: stretch; /* Forces children to span full width */
+                gap: 12px;
+            }
+
+            /* Stack back-link on its own row, icon + title together below it */
+            .filter-row .title-group {
+                display: grid;
+                grid-template-columns: auto 1fr; /* tight icon column, title fills the rest */
+                align-items: center;
+                width: 100%;
+                column-gap: 10px; /* space between icon and title */
+                row-gap: 8px;     /* space between back button and the row below */
+                margin-bottom: 4px;
+            }
+
+            .back-link {
+                grid-column: 1 / -1; /* spans the full top row */
+                justify-self: start; /* keeps the touch target from stretching full width */
+                padding: 0;
+                margin: 0;
+                font-size: 12px;
+                opacity: 0.8;
+            }
+
+            /* Hide the vertical divider since items are stacked, not inline */
+            .title-divider {
+                display: none !important;
+            }
+
+            .title-icon {
+                margin-right: 0; /* grid column-gap handles spacing now */
+            }
+
+            .filter-row h2 {
+                font-size: 1.25rem;
+                line-height: 1.2;
+                margin: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .filter-controls {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .control-group {
+                flex: 1 1 100%; /* Forces elements to take full width on small screens */
+            }
+
+            /* Hide labels to save space */
+            .control-label { display: none; }
+
+            /* Make buttons and selects fill the screen nicely */
+            .sort-toggle { width: 100%; display: flex; }
+            .sort-toggle button { flex: 1; text-align: center; }
+            .premium-select-wrap { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'partials/nav.html' with active_nav='watched' %}
+
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+    <div class="title-group">
+        <a href="{% url 'watched_list' %}" class="back-link">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+        </a>
+        <span class="title-divider" aria-hidden="true"></span>
+        <span class="title-icon"><i class="ti ti-movie" aria-hidden="true"></i></span>
+        <h2>Movies Watched</h2>
+    </div>
+
+    <form class="filter-controls" method="GET" action="{% url 'watched_movies_all' %}">
+
+        <input type="hidden" name="sort" value="{{ current_sort|default:'-watched_at' }}">
+
+        <div class="control-group">
+            <span class="control-label">Genre</span>
+            <div class="premium-select-wrap">
+                <select name="genre" onchange="this.form.submit()">
+                    <option value="">All Genres</option>
+                    {% for genre in genres %}
+                        <option value="{{ genre }}" {% if current_genre == genre %}selected{% endif %}>{{ genre }}</option>
+                    {% endfor %}
+                </select>
+                <i class="ti ti-chevron-down" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <span class="control-label">Sort</span>
+            <div class="sort-toggle">
+                <button type="submit" name="sort" value="-watched_at"
+                    onclick="this.form.querySelector('input[name=sort]').disabled=true;"
+                    class="{% if current_sort == '-watched_at' %}active{% endif %}">
+                    Latest
+                </button>
+                <button type="submit" name="sort" value="title"
+                    onclick="this.form.querySelector('input[name=sort]').disabled=true;"
+                    class="{% if current_sort == 'title' %}active{% endif %}">
+                    Alphabetical
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+    <div class="container">
+        {% if watched_movies %}
+        <div class="poster-grid" id="watched-movie-grid">
+            {% for movie in watched_movies %}
+            <div class="poster-card" id="card-{{ movie.id }}">
+                <a href="{% url 'movie_detail' movie.id %}" class="detail-link"></a>
+                {% if movie.poster_url %}
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="poster-img" loading="lazy">
+                {% else %}
+                    <div class="card-artwork"><div class="watermark">{{ movie.title|slice:":1" }}</div></div>
+                {% endif %}
+                <div class="poster-info">
+                    <div class="poster-title">{{ movie.title }}</div>
+                    {% if movie.franchise %}<div class="poster-franchise-tag">{{ movie.franchise.name }}</div>{% endif %}
+                </div>
+                <div class="watch-toggle-btn" data-movie-id="{{ movie.id }}" title="Mark as unwatched">
+                    <div class="check-icon"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">No movies match this filter yet.</div>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        /* ── Unwatch ── */
+        document.querySelectorAll('#watched-movie-grid .watch-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault(); e.stopPropagation();
+                const movieId = this.getAttribute('data-movie-id');
+                const card    = document.getElementById(`card-${movieId}`);
+
+                fetch(`/toggle/${movieId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                })
+                .then(res => { if (!res.ok) throw new Error('Network error'); return res.json(); })
+                .then(() => { card.classList.add('removing'); setTimeout(() => card.remove(), 300); })
+                .catch(err => { console.error(err); alert("Connection error. Could not update."); });
+            });
+        });
+
+        /* ── bfcache sync ── */
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
+
+</body>
+</html>
